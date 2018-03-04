@@ -4,6 +4,7 @@
 //var document = new JSDOM().window.document;
 
 //var svg = d3.select(document.body).append("svg"),
+
 var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
@@ -11,8 +12,9 @@ var svg = d3.select("svg"),
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 var spread = d3.forceSimulation()
-    //.force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("charge", d3.forceManyBody().strength(20))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide(15));
 
 
 
@@ -47,19 +49,12 @@ d3.json("graph.json", function(error, graph) {
       .on("tick", ticked);
 
   spread
-      .force("link", d3.forceLink().id(d=>d.id).distance(1)
+      .force("link", d3.forceLink().id(d=>d.id).distance(250)
       .links(graph.links.filter(d=>!d.isBridge)));
 
   spread
-      .force("link2", d3.forceLink().id(d=>d.id).distance(1000)
+      .force("link2", d3.forceLink().id(d=>d.id).distance(500)
       .links(graph.links.filter(d=>d.isBridge)));
-
-  //var cent = [[682, 682], [682, 2048], [682, 3413], [2048, 682], [2048, 3413], [3413, 682], [3413, 2048], [3413, 3413]];
-  //for(i=0; i<8; i++) {
-  //    d3.forceSimulation()
-  //        .force("center", d3.forceCenter(cent[i][0], cent[i][1]))
-  //        .nodes(graph.nodes.filter(d=>d.group == i));
-  //}
 
   function ticked() {
     link
@@ -90,3 +85,5 @@ function dragended(d) {
   d.fx = null;
   d.fy = null;
 }
+
+
