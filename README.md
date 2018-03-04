@@ -1,4 +1,4 @@
 # Sparse graph plotting demo with D3.js
 
 Result:
-![result](Assets/result.jpg)
+![result](https://github.com/ccdd9451/D3GraphDemo/blob/master/Assets/result.JPG)
