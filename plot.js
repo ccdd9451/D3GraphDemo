@@ -10,15 +10,13 @@ var svg = d3.select("svg"),
 
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 
-var simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(function(d) { return d.id; }))
-    .force("charge", d3.forceManyBody())
+var spread = d3.forceSimulation()
+    //.force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2));
 
-var attraction = d3.forceSimulation()
-    .force("groupAttr", d3.forceManyBody().strength(20))
 
-d3.json("miserables.json", function(error, graph) {
+
+d3.json("graph.json", function(error, graph) {
   if (error) throw error;
 
   var link = svg.append("g")
@@ -26,14 +24,15 @@ d3.json("miserables.json", function(error, graph) {
     .selectAll("line")
     .data(graph.links)
     .enter().append("line")
-      .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+      .attr("stroke-width", function(d) { return 1; })
+      .attr("color", function(d) { return d.isBridge ? d3.color("cyan"):d3.color("gray") });
 
   var node = svg.append("g")
       .attr("class", "nodes")
     .selectAll("circle")
     .data(graph.nodes)
     .enter().append("circle")
-      .attr("r", 5)
+      .attr("r", 10)
       .attr("fill", function(d) { return color(d.group); })
       .call(d3.drag()
           .on("start", dragstarted)
@@ -43,16 +42,24 @@ d3.json("miserables.json", function(error, graph) {
   node.append("title")
       .text(function(d) { return d.id; });
 
-  simulation
+  spread
       .nodes(graph.nodes)
       .on("tick", ticked);
 
-  simulation.force("link")
-      .links(graph.links);
+  spread
+      .force("link", d3.forceLink().id(d=>d.id).distance(1)
+      .links(graph.links.filter(d=>!d.isBridge)));
 
-  attraction
-      .nodes(graph.nodes.filter(d=>d.group == 1))
-      .force("groupAttr")
+  spread
+      .force("link2", d3.forceLink().id(d=>d.id).distance(1000)
+      .links(graph.links.filter(d=>d.isBridge)));
+
+  //var cent = [[682, 682], [682, 2048], [682, 3413], [2048, 682], [2048, 3413], [3413, 682], [3413, 2048], [3413, 3413]];
+  //for(i=0; i<8; i++) {
+  //    d3.forceSimulation()
+  //        .force("center", d3.forceCenter(cent[i][0], cent[i][1]))
+  //        .nodes(graph.nodes.filter(d=>d.group == i));
+  //}
 
   function ticked() {
     link
@@ -68,7 +75,7 @@ d3.json("miserables.json", function(error, graph) {
 });
 
 function dragstarted(d) {
-  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  if (!d3.event.active) spread.alphaTarget(0.3).restart();
   d.fx = d.x;
   d.fy = d.y;
 }
@@ -79,7 +86,7 @@ function dragged(d) {
 }
 
 function dragended(d) {
-  if (!d3.event.active) simulation.alphaTarget(0);
+  if (!d3.event.active) spread.alphaTarget(0);
   d.fx = null;
   d.fy = null;
 }
